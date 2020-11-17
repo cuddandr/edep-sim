@@ -55,7 +55,9 @@ EDepSim::UserDetectorConstruction::UserDetectorConstruction() {
     fValidateGeometry = false;
     fGDMLParser = NULL;
     fPhysicalWorld = NULL;
+    new G4UnitDefinition("volt/mm","V/mm","Electric field",volt/mm);
     new G4UnitDefinition("volt/cm","V/cm","Electric field",volt/cm);
+    new G4UnitDefinition("kilovolt/cm","kV/cm","Electric field",kilovolt/cm);
 }
 
 EDepSim::UserDetectorConstruction::~UserDetectorConstruction() {
