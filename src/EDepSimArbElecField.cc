@@ -30,6 +30,10 @@
 // History:
 // - 2020.04.14 A.Cudd created
 // - 2020.07.28 C.McGrew updated license with permission of A.Cudd
+// - 2020.11.17 A.Cudd added code to read in the units for the field
+//              position and strength (e.g. cm and V/cm) along with a
+//              flag to indicate if the map is symmetric about the XYZ
+//              axes. More in the README.
 //
 // -------------------------------------------------------------------
 
@@ -56,6 +60,9 @@ bool EDepSim::ArbElecField::ReadFile(const std::string& fname)
         double xcurr{0}, ycurr{0}, zcurr{0};
         std::string line;
 
+        std::string pos_units("mm");
+        std::string field_units("tesla");
+
         while(std::getline(fin >> std::ws, line))
         {
             std::stringstream ss(line);
@@ -64,9 +71,20 @@ bool EDepSim::ArbElecField::ReadFile(const std::string& fname)
                 continue;
 
             ss >> m_offset[0] >> m_offset[1] >> m_offset[2]
-                >> m_delta[0] >> m_delta[1] >> m_delta[2];
+                >> m_delta[0] >> m_delta[1] >> m_delta[2]
+                >> pos_units >> field_units
+                >> std::boolalpha >> m_is_symmetric;
             break;
         }
+
+        m_position_units = G4UnitDefinition::GetValueOf(pos_units);
+        m_field_units = G4UnitDefinition::GetValueOf(field_units);
+
+        for(auto& val : m_offset)
+            val *= m_position_units;
+
+        for(auto& val : m_delta)
+            val *= m_position_units;
 
         while(std::getline(fin >> std::ws, line))
         {
@@ -77,6 +95,10 @@ bool EDepSim::ArbElecField::ReadFile(const std::string& fname)
                 continue;
 
             ss >> x >> y >> z >> fx >> fy >> fz >> f;
+
+            x *= m_position_units;
+            y *= m_position_units;
+            z *= m_position_units;
 
             if(std::abs(x - xcurr) > 0.0 || xcount < 0)
             {
@@ -98,9 +120,9 @@ bool EDepSim::ArbElecField::ReadFile(const std::string& fname)
                 m_field_z[xcount].emplace_back(std::vector<double>{});
             }
 
-            m_field_x[xcount][ycount].push_back(fx * (volt/cm));
-            m_field_y[xcount][ycount].push_back(fy * (volt/cm));
-            m_field_z[xcount][ycount].push_back(fz * (volt/cm));
+            m_field_x[xcount][ycount].push_back(fx * m_field_units);
+            m_field_y[xcount][ycount].push_back(fy * m_field_units);
+            m_field_z[xcount][ycount].push_back(fz * m_field_units);
 
             if(std::abs(z - zcurr) > 0.0 || zcount < 0)
             {
@@ -115,9 +137,9 @@ bool EDepSim::ArbElecField::ReadFile(const std::string& fname)
 
 void EDepSim::ArbElecField::GetFieldValue(const G4double pos[4], G4double* field) const
 {
-    const double x = pos[0];
-    const double y = pos[1];
-    const double z = pos[2];
+    const double x = m_is_symmetric ? std::abs(pos[0]) : pos[0];
+    const double y = m_is_symmetric ? std::abs(pos[1]) : pos[1];
+    const double z = m_is_symmetric ? std::abs(pos[2]) : pos[2];
 
     EDepSim::Cubic interp;
     field[3] = interp.interpolate(x, y, z, m_field_x, m_delta[0], m_delta[1], m_delta[2], m_offset[0], m_offset[1], m_offset[2]);
@@ -130,5 +152,6 @@ void EDepSim::ArbElecField::PrintInfo() const
     EDepSimLog("Printing values for electric field.");
     EDepSimLog("m_filename : " << m_filename
               << "\nm_offset   : " << m_offset[0] << ", " << m_offset[1] << ", " << m_offset[2]
-              << "\nm_delta    : " << m_delta[0] << ", " << m_delta[1] << ", " << m_delta[2]);
+              << "\nm_delta    : " << m_delta[0] << ", " << m_delta[1] << ", " << m_delta[2]
+              << "\nm_symmetric: " << std::boolalpha << m_is_symmetric);
 }

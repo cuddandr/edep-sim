@@ -33,6 +33,8 @@
 // History:
 // - 2020.04.14 A.Cudd created
 // - 2020.07.28 C.McGrew updated license with permission of A.Cudd
+// - 2020.11.17 A.Cudd added variables for unit conversion and a flag for
+//              if the field is mirror symmetric about XYZ.
 //
 // -------------------------------------------------------------------
 
@@ -47,9 +49,10 @@
 #include <string>
 #include <vector>
 
-#include "G4Types.hh"
-#include "G4ElectricField.hh"
-#include "G4SystemOfUnits.hh"
+#include <G4ElectricField.hh>
+#include <G4SystemOfUnits.hh>
+#include <G4Types.hh>
+#include <G4UnitsTable.hh>
 
 #include "EDepSimLog.hh"
 #include "EDepSimInterpolator.hh"
@@ -66,6 +69,9 @@ class EDepSim::ArbElecField : public G4ElectricField
         virtual void GetFieldValue(const G4double pos[4], G4double* field) const;
 
     private:
+        bool m_is_symmetric;
+        double m_position_units;
+        double m_field_units;
         std::string m_filename;
         std::array<double, 3> m_offset;
         std::array<double, 3> m_delta;
