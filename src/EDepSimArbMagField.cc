@@ -61,7 +61,7 @@ bool EDepSim::ArbMagField::ReadFile(const std::string& fname)
         double xcurr{0}, ycurr{0}, zcurr{0};
         std::string line;
 
-        std::string pos_units("mm");
+        std::string pos_units("cm");
         std::string field_units("tesla");
 
         while(std::getline(fin >> std::ws, line))
@@ -73,8 +73,8 @@ bool EDepSim::ArbMagField::ReadFile(const std::string& fname)
 
             ss >> m_offset[0] >> m_offset[1] >> m_offset[2]
                 >> m_delta[0] >> m_delta[1] >> m_delta[2]
-                >> pos_units >> field_units
-                >> std::boolalpha >> m_is_symmetric;
+                >> std::boolalpha >> m_is_symmetric
+                >> pos_units >> field_units;
             break;
         }
 
