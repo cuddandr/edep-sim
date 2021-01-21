@@ -138,14 +138,18 @@ bool EDepSim::ArbMagField::ReadFile(const std::string& fname)
 
 void EDepSim::ArbMagField::GetFieldValue(const G4double pos[4], G4double* field) const
 {
-    const double x = m_is_symmetric ? std::abs(pos[0]) : pos[0];
-    const double y = m_is_symmetric ? std::abs(pos[1]) : pos[1];
-    const double z = m_is_symmetric ? std::abs(pos[2]) : pos[2];
+    //To properly work with symmetric field map files, the offset is first subtracted from the
+    //position before taking the absolute value and passing to the interpolation function.
+    const double x = m_is_symmetric ? std::abs(pos[0] - m_offset[0]) : pos[0] - m_offset[0];
+    const double y = m_is_symmetric ? std::abs(pos[1] - m_offset[1]) : pos[1] - m_offset[1];
+    const double z = m_is_symmetric ? std::abs(pos[2] - m_offset[2]) : pos[2] - m_offset[2];
 
+    //Zeroes are then passed to the interpolation function as the offset has been included in
+    //calculating the x,y,z point.
     EDepSim::Cubic interp;
-    field[0] = interp.interpolate(x, y, z, m_field_x, m_delta[0], m_delta[1], m_delta[2], m_offset[0], m_offset[1], m_offset[2]);
-    field[1] = interp.interpolate(x, y, z, m_field_y, m_delta[0], m_delta[1], m_delta[2], m_offset[0], m_offset[1], m_offset[2]);
-    field[2] = interp.interpolate(x, y, z, m_field_z, m_delta[0], m_delta[1], m_delta[2], m_offset[0], m_offset[1], m_offset[2]);
+    field[0] = interp.interpolate(x, y, z, m_field_x, m_delta[0], m_delta[1], m_delta[2], 0.0, 0.0, 0.0);
+    field[1] = interp.interpolate(x, y, z, m_field_y, m_delta[0], m_delta[1], m_delta[2], 0.0, 0.0, 0.0);
+    field[2] = interp.interpolate(x, y, z, m_field_z, m_delta[0], m_delta[1], m_delta[2], 0.0, 0.0, 0.0);
 }
 
 void EDepSim::ArbMagField::PrintInfo() const
