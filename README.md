@@ -502,7 +502,10 @@ The possible units for the magnetic field are `tesla`, `gauss`, `T`, and
 Arbitrary electric and magnetic fields can be set using the `ArbEField` and
 `BField` auxiliary types. The value for each is the name of the grid file which
 specifies the value of the field at a set of X, Y, and Z grid points (global
-coordinates).
+coordinates). The field maps can also be given as a grid that is symmetric about
+the X,Y,Z axes (i.e. only specifying the positive coordinates) and is indicated
+by an optional parameter in the field map file header. By default the code
+assumes the field map is non-symmetric.
 
 ```
 <auxiliary auxtype="ArbEField" auxvalue="efield_grid_file.txt"/>
@@ -514,7 +517,9 @@ The grid file is specified in the following format:
 ```
 # First row is a header defining the origin offset and grid spacing
 # in each position coordinate X, Y, Z then hX, hY, hZ.
--2600.00 -4200.00 12300.00 200.00 200.00 200.00
+# Optionally it also defines if the field is symmetric and can specify
+# the position and field units.
+-260.00 -420.00 1230.00 20.00 20.00 20.00 <is_symmetric> <position_units> <field_units>
 
 # Next, each row contains one grid point: x,y,z,fx,fy,fz,f
 0.00 0.00 000.00 0.40 0.00 0.00 0.40
@@ -523,9 +528,26 @@ The grid file is specified in the following format:
 ...and so on...
 ```
 
-The position, XYZ, is specified in `mm`, the electric field is specified in
-`V/cm`, and the magnetic field is specified in `T`. The grid spacing for each
+An example for a symmetric field map and specifying the units for the grid:
+```
+# First row is a header defining the origin offset and grid spacing
+# in each position coordinate X, Y, Z then hX, hY, hZ.
+# Optionally it also defines if the field is symmetric and can specify
+# the position and field units.
+-26.00 -42.00 123.00 2.00 2.00 2.00 true m V/m
+...
+```
+
+The default units for position, XYZ, are `cm`, the default electric field units are
+`V/cm`, and the default mangetic field units are `T`. The grid spacing for each
 axis can be different.
+
+The symmetry flag must be written as `true` or `false` if used. The units are written
+as strings, and valid options are the default units in Geant4 plus those defined in
+`EDepSim::UserDetectorConstruction()`.
+
+Note that the header values/options are position sensitive. For example if specifying
+the units the symmetry flag must be used to get the positions correct.
 
 FX, FY, FZ are the magnitudes of the fields in the X,Y,Z directions
 and F is the total magnitude of the field vector. The Z coordinate
